@@ -22,8 +22,11 @@ class _RegisterPageState extends State<RegisterPage> {
     );
 
     if (result['success']) {
-      print("Register sukses: ${result['user']}");
-      // TODO: Navigasi ke login page atau langsung ke home
+      // ✅ Kembali ke halaman login setelah berhasil register
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Berhasil daftar. Silakan login.')),
+      );
+      Navigator.pop(context); // kembali ke LoginPage
     } else {
       setState(() {
         errorMsg = result['message'];

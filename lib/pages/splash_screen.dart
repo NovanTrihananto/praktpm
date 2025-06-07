@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'admin_page.dart';
-import 'user_page.dart';
+import 'home_page.dart';
 import 'login_page.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -31,18 +30,12 @@ class _SplashScreenState extends State<SplashScreen> {
         'role': userRole,
       };
 
-      if (userRole == 'admin') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => AdminPage(user: user)),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => UserPage(user: user)),
-        );
-      }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => MainPage(user: user)),
+      );
     } else {
+      // Jika tidak login, arahkan ke LoginPage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginPage()),
