@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:tpmteori/service/kursus_service.dart';
 
 class DetailKursusScreen extends StatelessWidget {
   final Map<String, dynamic> kursus;
+  final int userId; // Diterima dari halaman sebelumnya
 
-  const DetailKursusScreen({super.key, required this.kursus});
+  const DetailKursusScreen({
+    super.key,
+    required this.kursus,
+    required this.userId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -14,6 +20,7 @@ class DetailKursusScreen extends StatelessWidget {
     final imageUrl = kursus['Img'];
     final deskripsi = kursus['Deskripsi'] ?? '-';
     final kategori = kursus['Kategori'] ?? '-';
+    final kursusId = kursus['id']; // Pastikan sesuai backend
 
     return Scaffold(
       appBar: AppBar(
@@ -120,15 +127,52 @@ class DetailKursusScreen extends StatelessWidget {
 
             const SizedBox(height: 40),
 
-            // Tombol Daftar (placeholder)
+            // Tombol Daftar Kursus
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Fitur daftar kursus belum tersedia.'),
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Konfirmasi'),
+                      content: const Text(
+                          'Yakin ingin mendaftar ke kursus ini?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Batal'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Ya, Daftar'),
+                        ),
+                      ],
                     ),
                   );
+
+                  if (confirm != true) return;
+
+                  try {
+                    final success = await KursusService()
+                        .daftarKursus(userId, kursusId);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(success
+                            ? 'Berhasil mendaftar kursus.'
+                            : 'Gagal mendaftar kursus.'),
+                        backgroundColor:
+                            success ? Colors.green : Colors.red,
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Terjadi kesalahan: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,

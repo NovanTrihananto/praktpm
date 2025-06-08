@@ -60,4 +60,13 @@ class UserService {
       throw Exception('Terjadi kesalahan: $e');
     }
   }
+
+ static Future<Map<String, dynamic>?> getUserById(String id) async {
+    final response = await http.get(Uri.parse('$baseUrl/users/$id'));
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      return null;
+    }
+  }
 }

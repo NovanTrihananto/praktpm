@@ -29,10 +29,13 @@ class _LoginPageState extends State<LoginPage> {
       await prefs.setString('userName', user['name']);
       await prefs.setString('userRole', user['role']);
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MainPage(user: user)),
-      );
+      final userId = user['id']; // Ambil ID user dari response login
+
+Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(builder: (context) => MainPage(user: user)),
+);
+
     } else {
       setState(() {
         errorMsg = result['message'];

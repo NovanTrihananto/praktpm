@@ -43,5 +43,72 @@ class KursusService {
       throw Exception('Failed to delete course');
     }
   }
-}
 
+  Future<bool> daftarKursus(int userId, int kursusId) async {
+    final url = Uri.parse('$baseUrl/ikutkursus');
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'idUser': userId, 'idKursus': kursusId}),
+    );
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  Future<Map<String, dynamic>?> getKursusById(String id) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/courses/$id'));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data; // Asumsi backend return JSON kursus
+      } else {
+        print('Gagal load kursus by id: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error getKursusById: $e');
+      return null;
+    }
+  }
+
+  // Tambahkan method ini:
+  Future<List<dynamic>> fetchKursusDiikuti(int userId) async {
+    final response = await http.get(Uri.parse('$baseUrl/ikutkursus/$userId'));
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Gagal memuat kursus yang diikuti');
+    }
+  }
+
+  Future<List<dynamic>> fetchAllIkutKursus() async {
+    final response = await http.get(Uri.parse('$baseUrl/ikutkursus'));
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Gagal memuat semua pendaftaran kursus');
+    }
+  }
+
+  // Update status atau pembayaran (bisa salah satu)
+  Future<void> updateIkutKursus(int id, Map<String, dynamic> data) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/ikutkursus/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Gagal update data ikut kursus');
+    }
+  }
+
+  // Hapus pendaftaran ikut kursus
+  Future<void> deleteIkutKursus(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/ikutkursus/$id'));
+    if (response.statusCode != 200) {
+      throw Exception('Gagal menghapus pendaftaran');
+    }
+  }
+}

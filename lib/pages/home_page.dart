@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tpmteori/pages/course_screen.dart';
 import 'package:tpmteori/pages/home_screen.dart';
+import 'package:tpmteori/pages/ikutkursus_page.dart';
 import 'login_page.dart';
 import 'profil_page.dart';
 import 'user_management_page.dart';
@@ -31,10 +32,12 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext ctx) {
     final role = widget.user['role'];
 
-    // Tambahkan halaman untuk daftar kursus
+    final userId =
+        int.tryParse(widget.user['id'].toString()) ?? 0; // <-- ini penting
+
     final pages = <Widget>[
       role == 'admin' ? _buildAdminDashboard() : HomeScreen(user: widget.user),
-      CoursesScreen(), // halaman baru untuk daftar kursus
+      CoursesScreen(userId: userId), // Kirim userId yang sudah int
       ProfilePage(user: widget.user),
     ];
 
@@ -45,7 +48,7 @@ class _MainPageState extends State<MainPage> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => handleLogout(ctx),
-          )
+          ),
         ],
       ),
       body: pages[_currentIndex],
@@ -67,16 +70,38 @@ class _MainPageState extends State<MainPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Selamat datang, Admin ${widget.user['name']}!", style: const TextStyle(fontSize: 20)),
+          Text(
+            "Selamat datang, Admin ${widget.user['name']}!",
+            style: const TextStyle(fontSize: 20),
+          ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UserManagementPage())),
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const UserManagementPage()),
+                ),
             child: const Text("Kelola User"),
           ),
           const SizedBox(height: 10),
           ElevatedButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminCoursesPage())),
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AdminCoursesPage()),
+                ),
             child: const Text("Kelola Kursus"),
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton(
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const IkutKursusAdminPage(),
+                  ),
+                ),
+            child: const Text("Kelola Pendaftaran Kursus"),
           ),
         ],
       ),

@@ -4,6 +4,7 @@ import 'package:tpmteori/service/kursus_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final Map<String, dynamic> user;
+
   const HomeScreen({super.key, required this.user});
 
   @override
@@ -288,7 +289,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       context,
                       MaterialPageRoute(
                         builder:
-                            (context) => DetailKursusScreen(kursus: kursus),
+                            (context) => DetailKursusScreen(
+                              kursus: kursus,
+                              userId:
+                                  int.tryParse(widget.user['id'].toString()) ??
+                                  0,
+                            ),
                       ),
                     );
                   },
