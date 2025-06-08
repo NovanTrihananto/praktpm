@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tpmteori/pages/admin_course_page.dart';
-import 'package:tpmteori/pages/user_management_page.dart';
+import 'package:tpmteori/pages/course_screen.dart';
+import 'package:tpmteori/pages/home_screen.dart';
 import 'login_page.dart';
 import 'profil_page.dart';
+import 'user_management_page.dart';
+import 'admin_course_page.dart';
 
 class MainPage extends StatefulWidget {
   final Map<String, dynamic> user;
-
   const MainPage({super.key, required this.user});
 
   @override
@@ -17,47 +18,43 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
 
-  Future<void> handleLogout(BuildContext context) async {
+  Future<void> handleLogout(BuildContext c) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
+      MaterialPageRoute(builder: (c) => LoginPage()),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext ctx) {
     final role = widget.user['role'];
 
-    final adminPages = [
-      _buildAdminDashboard(),
-      ProfilePage(user: widget.user), // pakai ProfilePage dengan fitur gambar
+    // Tambahkan halaman untuk daftar kursus
+    final pages = <Widget>[
+      role == 'admin' ? _buildAdminDashboard() : HomeScreen(user: widget.user),
+      CoursesScreen(), // halaman baru untuk daftar kursus
+      ProfilePage(user: widget.user),
     ];
-
-    final userPages = [
-      _buildUserDashboard(),
-      ProfilePage(user: widget.user), // sama untuk user
-    ];
-
-    final pages = role == 'admin' ? adminPages : userPages;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(role == 'admin' ? 'Admin Dashboard' : 'User Dashboard'),
+        title: Text(role == 'admin' ? 'Admin Dashboard' : 'Kursus Online'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => handleLogout(context),
-          ),
+            onPressed: () => handleLogout(ctx),
+          )
         ],
       ),
       body: pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (i) => setState(() => _currentIndex = i),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
+          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Kursus'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
         ],
       ),
@@ -70,62 +67,16 @@ class _MainPageState extends State<MainPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Selamat datang, Admin ${widget.user['name']}!",
-            style: const TextStyle(fontSize: 20),
-          ),
+          Text("Selamat datang, Admin ${widget.user['name']}!", style: const TextStyle(fontSize: 20)),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const UserManagementPage(),
-                ),
-              );
-            },
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UserManagementPage())),
             child: const Text("Kelola User"),
           ),
           const SizedBox(height: 10),
           ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AdminCoursesPage(),
-                ),
-              );
-            },
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminCoursesPage())),
             child: const Text("Kelola Kursus"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUserDashboard() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Halo, ${widget.user['name']} 👋",
-            style: const TextStyle(fontSize: 20),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {
-              // Navigasi ke daftar kursus
-            },
-            child: const Text("Lihat Semua Kursus"),
-          ),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () {
-              // Navigasi ke kursus yang diikuti
-            },
-            child: const Text("Kursus yang Diikuti"),
           ),
         ],
       ),
