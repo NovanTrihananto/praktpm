@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:tpmteori/service/kursus_service.dart';
 
 class DetailKursusScreen extends StatefulWidget {
@@ -24,6 +25,47 @@ class _DetailKursusScreenState extends State<DetailKursusScreen> {
     'EUR': 0.000061,
     'JPY': 0.0098,
   };
+
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  @override
+  void initState() {
+    super.initState();
+    _initNotifications();
+  }
+
+  void _initNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future<void> _showNotification(String namaKursus) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'kursus_channel_id',
+      'Notifikasi Kursus',
+      channelDescription: 'Notifikasi pendaftaran kursus',
+      importance: Importance.max,
+      priority: Priority.high,
+      ticker: 'ticker',
+    );
+
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Pendaftaran Berhasil',
+      'Anda telah mendaftar kursus: $namaKursus',
+      platformChannelSpecifics,
+    );
+  }
 
   String formatHarga(double harga, String mataUang) {
     if (mataUang == 'IDR') {
@@ -57,7 +99,6 @@ class _DetailKursusScreenState extends State<DetailKursusScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Gambar
             if (imageUrl != null && imageUrl.isNotEmpty)
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
@@ -71,17 +112,23 @@ class _DetailKursusScreenState extends State<DetailKursusScreen> {
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(Icons.image_not_supported,
-                    size: 80, color: Colors.grey),
+                child: const Icon(
+                  Icons.image_not_supported,
+                  size: 80,
+                  color: Colors.grey,
+                ),
               ),
-
             const SizedBox(height: 24),
-            Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            Text('Kategori: $kategori',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            Text(
+              'Kategori: $kategori',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
             const SizedBox(height: 16),
-
             Row(
               children: [
                 const Icon(Icons.person, color: Colors.blue),
@@ -90,7 +137,6 @@ class _DetailKursusScreenState extends State<DetailKursusScreen> {
               ],
             ),
             const SizedBox(height: 12),
-
             Row(
               children: [
                 const Icon(Icons.schedule, color: Colors.orange),
@@ -99,7 +145,6 @@ class _DetailKursusScreenState extends State<DetailKursusScreen> {
               ],
             ),
             const SizedBox(height: 12),
-
             Row(
               children: [
                 const Icon(Icons.attach_money, color: Colors.green),
@@ -111,28 +156,30 @@ class _DetailKursusScreenState extends State<DetailKursusScreen> {
                 const SizedBox(width: 10),
                 DropdownButton<String>(
                   value: selectedCurrency,
-                  items: currencyRates.keys
-                      .map((currency) => DropdownMenuItem<String>(
-                            value: currency,
-                            child: Text(currency),
-                          ))
-                      .toList(),
+                  items: currencyRates.keys.map((currency) {
+                    return DropdownMenuItem<String>(
+                      value: currency,
+                      child: Text(currency),
+                    );
+                  }).toList(),
                   onChanged: (value) {
                     if (value != null) {
-                      setState(() => selectedCurrency = value);
+                      setState(() {
+                        selectedCurrency = value;
+                      });
                     }
                   },
                 ),
               ],
             ),
-
             const SizedBox(height: 24),
-            const Text('Deskripsi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Deskripsi',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             Text(deskripsi, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 40),
-
-            // Tombol Daftar
             Center(
               child: ElevatedButton(
                 onPressed: () async {
@@ -157,18 +204,31 @@ class _DetailKursusScreenState extends State<DetailKursusScreen> {
                   if (confirm != true) return;
 
                   try {
-                    final success = await KursusService()
-                        .daftarKursus(widget.userId, kursusId);
+                    final success = await KursusService().daftarKursus(
+                      widget.userId,
+                      kursusId,
+                    );
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(success
-                            ? 'Berhasil mendaftar kursus.'
-                            : 'Gagal mendaftar kursus.'),
-                        backgroundColor:
-                            success ? Colors.green : Colors.red,
+                        content: Text(
+                          success
+                              ? 'Anda berhasil daftar kursus: $title'
+                              : 'Gagal mendaftar kursus.',
+                        ),
+                        backgroundColor: success ? Colors.green : Colors.red,
+                        duration: const Duration(seconds: 3),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     );
+
+                    // Tampilkan notifikasi jika sukses
+                    if (success) {
+                      _showNotification(title);
+                    }
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -185,7 +245,10 @@ class _DetailKursusScreenState extends State<DetailKursusScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Daftar Kursus', style: TextStyle(fontSize: 16)),
+                child: const Text(
+                  'Daftar Kursus',
+                  style: TextStyle(fontSize: 16),
+                ),
               ),
             ),
           ],
@@ -194,4 +257,3 @@ class _DetailKursusScreenState extends State<DetailKursusScreen> {
     );
   }
 }
-
