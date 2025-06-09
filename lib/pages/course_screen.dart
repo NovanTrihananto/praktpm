@@ -23,24 +23,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          'Kursus Saya',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        shadowColor: Colors.black12,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF64748B)),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: FutureBuilder<List<dynamic>>(
         future: futureIkutKursus,
         builder: (context, snapshot) {
