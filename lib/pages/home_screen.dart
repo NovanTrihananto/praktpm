@@ -13,11 +13,39 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late Future<List<dynamic>> futureKursus;
+  List<dynamic> _allKursus = [];
+  List<dynamic> _filteredKursus = [];
+
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     futureKursus = KursusService().fetchKursus();
+    futureKursus.then((data) {
+      setState(() {
+        _allKursus = data;
+        _filteredKursus = data;
+      });
+    });
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    String keyword = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredKursus = _allKursus
+          .where((kursus) =>
+              kursus['Judul'] != null &&
+              kursus['Judul'].toLowerCase().contains(keyword))
+          .toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -60,8 +88,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const TextField(
-                      decoration: InputDecoration(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: const InputDecoration(
                         hintText: 'Cari kursus...',
                         prefixIcon: Icon(Icons.search, color: Colors.grey),
                         border: InputBorder.none,
@@ -97,26 +126,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
-                        _buildCategoryCard(
-                          'Programming',
-                          Icons.code,
-                          Colors.purple,
-                        ),
-                        _buildCategoryCard(
-                          'Design',
-                          Icons.palette,
-                          Colors.pink,
-                        ),
-                        _buildCategoryCard(
-                          'Marketing',
-                          Icons.trending_up,
-                          Colors.orange,
-                        ),
-                        _buildCategoryCard(
-                          'Photography',
-                          Icons.camera_alt,
-                          Colors.green,
-                        ),
+                        _buildCategoryCard('Programming', Icons.code, Colors.purple),
+                        _buildCategoryCard('Design', Icons.palette, Colors.pink),
+                        _buildCategoryCard('Marketing', Icons.trending_up, Colors.orange),
+                        _buildCategoryCard('Photography', Icons.camera_alt, Colors.green),
                       ],
                     ),
                   ),
@@ -125,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 32),
 
-            // Kursus Populer (dari API)
+            // Kursus Populer (dengan pencarian)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
@@ -156,14 +169,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         return const Center(child: CircularProgressIndicator());
                       } else if (snapshot.hasError) {
                         return Text('Gagal memuat kursus: ${snapshot.error}');
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Text('Belum ada kursus tersedia.');
+                      } else if (_filteredKursus.isEmpty) {
+                        return const Text('Kursus tidak ditemukan.');
                       } else {
                         return Column(
-                          children:
-                              snapshot.data!.map((kursus) {
-                                return _buildCourseCard(kursus, Colors.blue);
-                              }).toList(),
+                          children: _filteredKursus
+                              .map((kursus) => _buildCourseCard(kursus, Colors.blue))
+                              .toList(),
                         );
                       }
                     },
@@ -235,18 +247,16 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                image:
-                    imageUrl != null && imageUrl.isNotEmpty
-                        ? DecorationImage(
-                          image: NetworkImage(imageUrl),
-                          fit: BoxFit.cover,
-                        )
-                        : null,
+                image: imageUrl != null && imageUrl.isNotEmpty
+                    ? DecorationImage(
+                        image: NetworkImage(imageUrl),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
               ),
-              child:
-                  imageUrl == null || imageUrl.isEmpty
-                      ? Icon(Icons.image_not_supported, color: color, size: 32)
-                      : null,
+              child: imageUrl == null || imageUrl.isEmpty
+                  ? Icon(Icons.image_not_supported, color: color, size: 32)
+                  : null,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -288,13 +298,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder:
-                            (context) => DetailKursusScreen(
-                              kursus: kursus,
-                              userId:
-                                  int.tryParse(widget.user['id'].toString()) ??
-                                  0,
-                            ),
+                        builder: (context) => DetailKursusScreen(
+                          kursus: kursus,
+                          userId:
+                              int.tryParse(widget.user['id'].toString()) ?? 0,
+                        ),
                       ),
                     );
                   },
