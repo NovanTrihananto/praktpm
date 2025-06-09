@@ -2,9 +2,12 @@
     package="com.example.tpmteori">
 
     <!-- Tambahkan permission akses storage dan kamera -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application
         android:label="tpmteori"
@@ -31,6 +34,9 @@
             </intent-filter>
         </activity>
 
+         <meta-data
+        android:name="com.google.android.geo.API_KEY"
+        android:value="AIzaSyAeFgSMw_9h7z0HrjXDSdGeHnwy2_5f8pI"/>
         <!-- Jangan dihapus, diperlukan plugin Flutter -->
         <meta-data
             android:name="flutterEmbedding"

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive/hive.dart';
+import 'package:tpmteori/pages/kantor_maps_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../pages/login_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -50,6 +52,22 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  void _openMaps() async {
+    final latitude = -6.200000; // Ganti dengan koordinat kantor
+    final longitude = 106.816666; // Ganti dengan koordinat kantor
+    final googleMapsUrl =
+        'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+
+    if (await canLaunchUrl(Uri.parse(googleMapsUrl))) {
+      await launchUrl(
+        Uri.parse(googleMapsUrl),
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      throw 'Tidak bisa membuka Google Maps.';
+    }
+  }
+
   Future<void> handleLogout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -67,11 +85,7 @@ class _ProfilePageState extends State<ProfilePage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.blue.shade50,
-              Colors.white,
-              Colors.blue.shade50,
-            ],
+            colors: [Colors.blue.shade50, Colors.white, Colors.blue.shade50],
           ),
         ),
         child: SafeArea(
@@ -80,7 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               children: [
                 const SizedBox(height: 40),
-                
+
                 // Profile Image Section
                 Stack(
                   children: [
@@ -95,20 +109,21 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ],
                       ),
-                      child: imageBytes != null
-                          ? CircleAvatar(
-                              radius: 80,
-                              backgroundImage: MemoryImage(imageBytes!),
-                            )
-                          : CircleAvatar(
-                              radius: 80,
-                              backgroundColor: Colors.blue.shade100,
-                              child: Icon(
-                                Icons.person,
-                                size: 60,
-                                color: Colors.blue.shade400,
+                      child:
+                          imageBytes != null
+                              ? CircleAvatar(
+                                radius: 80,
+                                backgroundImage: MemoryImage(imageBytes!),
+                              )
+                              : CircleAvatar(
+                                radius: 80,
+                                backgroundColor: Colors.blue.shade100,
+                                child: Icon(
+                                  Icons.person,
+                                  size: 60,
+                                  color: Colors.blue.shade400,
+                                ),
                               ),
-                            ),
                     ),
                     Positioned(
                       bottom: 0,
@@ -137,9 +152,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 // Welcome Text
                 Text(
                   'Profil Pengguna',
@@ -149,9 +164,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     color: Colors.grey.shade800,
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // User Information Cards
                 _buildInfoCard(
                   icon: Icons.person_outline,
@@ -159,27 +174,27 @@ class _ProfilePageState extends State<ProfilePage> {
                   value: widget.user['name'] ?? 'Tidak ada nama',
                   color: Colors.blue,
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 _buildInfoCard(
                   icon: Icons.email_outlined,
                   title: 'Email',
                   value: widget.user['email'] ?? 'Tidak ada email',
                   color: Colors.green,
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 _buildInfoCard(
                   icon: Icons.work_outline,
                   title: 'Role',
                   value: widget.user['role'] ?? 'Tidak ada role',
                   color: Colors.orange,
                 ),
-                
+
                 const SizedBox(height: 50),
-                
+
                 // Logout Button
                 Container(
                   width: double.infinity,
@@ -214,8 +229,49 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
+                // Button to open Google Maps
+                Container(
+                  width: double.infinity,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.3),
+                        blurRadius: 12,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const KantorMapsScreen(),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    icon: const Icon(Icons.map, size: 24),
+                    label: const Text(
+                      'Lihat Lokasi Kantor',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -243,10 +299,7 @@ class _ProfilePageState extends State<ProfilePage> {
             spreadRadius: 2,
           ),
         ],
-        border: Border.all(
-          color: Colors.grey.shade100,
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey.shade100, width: 1),
       ),
       child: Row(
         children: [
@@ -256,11 +309,7 @@ class _ProfilePageState extends State<ProfilePage> {
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
+            child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'dart:async';
+
 import 'package:tpmteori/pages/course_screen.dart';
 import 'package:tpmteori/pages/home_screen.dart';
 import 'package:tpmteori/pages/ikutkursus_page.dart';
 import 'login_page.dart';
-import 'dart:async';
 import 'profil_page.dart';
 import 'user_management_page.dart';
 import 'admin_course_page.dart';
@@ -24,30 +26,69 @@ class _MainPageState extends State<MainPage> {
   Timer? _timer;
   String _selectedZone = 'WIB';
 
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
+
   @override
   void initState() {
     super.initState();
+
+    // Timer real-time
     _currentTime = DateTime.now();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() {
         _currentTime = DateTime.now();
       });
     });
+
+    // Listener accelerometer untuk logout saat digoyang
+    _accelerometerSubscription = accelerometerEvents.listen((event) {
+      final double acceleration = event.x.abs() + event.y.abs() + event.z.abs();
+      if (acceleration > 20) {
+        _logoutOnShake();
+      }
+    });
+  }
+
+  void _logoutOnShake() async {
+     handleLogout(context);
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _accelerometerSubscription?.cancel();
     super.dispose();
   }
 
-  Future<void> handleLogout(BuildContext c) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (c) => LoginPage()),
+  Future<void> handleLogout(BuildContext context) async {
+    final bool? confirmLogout = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Konfirmasi Logout"),
+        content: const Text("Apakah Anda yakin ingin logout?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text("Ya, Logout"),
+          ),
+        ],
+      ),
     );
+
+    if (confirmLogout == true) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => LoginPage()),
+        );
+      }
+    }
   }
 
   String getFormattedTime() {
@@ -96,20 +137,28 @@ class _MainPageState extends State<MainPage> {
                 children: [
                   Text(
                     getFormattedTime(),
-                    style: const TextStyle(fontSize: 14, color: Color.fromARGB(255, 0, 0, 0)),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color.fromARGB(255, 0, 0, 0),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   DropdownButton<String>(
                     value: _selectedZone,
                     dropdownColor: const Color.fromARGB(255, 0, 0, 0),
                     underline: const SizedBox(),
-                    style: const TextStyle(color: Color.fromARGB(255, 255, 255, 255), fontSize: 14),
+                    style: const TextStyle(
+                      color: Color.fromARGB(255, 255, 255, 255),
+                      fontSize: 14,
+                    ),
                     iconEnabledColor: const Color.fromARGB(255, 255, 255, 255),
                     items: ['WIB', 'WITA', 'WIT', 'London']
-                        .map((zone) => DropdownMenuItem(
-                              value: zone,
-                              child: Text(zone),
-                            ))
+                        .map(
+                          (zone) => DropdownMenuItem(
+                            value: zone,
+                            child: Text(zone),
+                          ),
+                        )
                         .toList(),
                     onChanged: (value) {
                       if (value != null) {
